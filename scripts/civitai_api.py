@@ -587,7 +587,11 @@ def update_model_versions(model_id, json_input=None):
                         retrycount = 3
                         while retrycount > 0:
                             try:
+                                print(f"retrycount=: \"{retrycount}\"")
+                                print(f"root=: \"{root}\"")
+                                print(f"file=: \"{file}\"")
                                 json_path = os.path.join(root, file)
+                                print(f"json_path=: \"{json_path}\"")
                                 with open(json_path, 'r', encoding="utf-8") as f:
                                     try:
                                         json_data = json.load(f)
