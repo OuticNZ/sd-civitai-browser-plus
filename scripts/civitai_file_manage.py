@@ -459,7 +459,11 @@ def save_model_info(install_path, file_name, sub_folder, sha256=None, preview_ht
     filename = os.path.splitext(file_name)[0]
     json_file = os.path.join(install_path, f'{filename}.json')
     if not os.path.exists(install_path):
-        os.makedirs(install_path)
+        try:
+            os.makedirs(install_path)
+        except Exception as e:
+            print(f"Error creating directory {install_path}: {e}")
+            time.sleep(5)
     
     save_api_info = getattr(opts, "save_api_info", False)
     use_local = getattr(opts, "local_path_in_html", False)
