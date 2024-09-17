@@ -6,6 +6,7 @@ import urllib.parse
 import urllib.error
 import os
 import re
+import time
 import datetime
 import platform
 from PIL import Image
@@ -583,19 +584,34 @@ def update_model_versions(model_id, json_input=None):
             for root, _, files in os.walk(model_folder):
                 for file in files:
                     if file.endswith('.json'):
-                        try:
-                            json_path = os.path.join(root, file)
-                            with open(json_path, 'r', encoding="utf-8") as f:
-                                json_data = json.load(f)
-                                if isinstance(json_data, dict):
-                                    if 'sha256' in json_data and json_data['sha256']:
-                                        sha256 = json_data.get('sha256', "").upper()
-                                        for version_name, _, file_sha256 in version_files:
-                                            if sha256 == file_sha256:
-                                                installed_versions.add(version_name)
-                                                break
-                        except Exception as e:
-                            print(f"failed to read: \"{file}\": {e}")
+                        retrycount = 3
+                        while retrycount > 0:
+                            try:
+                                print(f"retrycount=: \"{retrycount}\"")
+                                print(f"root=: \"{root}\"")
+                                print(f"file=: \"{file}\"")
+                                json_path = os.path.join(root, file)
+                                print(f"json_path=: \"{json_path}\"")
+                                with open(json_path, 'r', encoding="utf-8") as f:
+                                    try:
+                                        json_data = json.load(f)
+                                    except Exception as e:
+                                        print(f"failed to load json: \"{file}\": {e}")
+                                        retrycount=retrycount-1
+                                        time.sleep(5)
+                                    else:
+                                        if isinstance(json_data, dict):
+                                            if 'sha256' in json_data and json_data['sha256']:
+                                                sha256 = json_data.get('sha256', "").upper()
+                                                for version_name, _, file_sha256 in version_files:
+                                                    if sha256 == file_sha256:
+                                                        installed_versions.add(version_name)
+                                                        break
+                                        retrycount=0
+                            except Exception as e:
+                                print(f"failed to read: \"{file}\": {e}")
+                                time.sleep(5)
+                                retrycount=retrycount-1
 
                     for version_name, version_filename, _ in version_files:
                         if file == version_filename:
